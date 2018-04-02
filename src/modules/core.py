@@ -51,7 +51,7 @@ def nick_changed(prefix, chan, params):
 def bot_joined(prefix, destination, params):
 
     if prefix[0] == bot.nick:
-
+        bot.do("MODE", params[0])
         bot.chans.append(params[0])
 
         if params[0] not in bot.config['chans']:
@@ -59,6 +59,37 @@ def bot_joined(prefix, destination, params):
             bot.config['chans'].append(params[0])
 
             bot.save()
+
+
+@hook.event('324')
+def on_chan_mode(prefix, chan, params):
+
+    if "r" not in params[2]:
+        bot.say(params[1], "I do not stay in unregistered channels")
+        bot.part(params[1])
+
+
+@hook.event('MODE')
+def on_mode_change(prefix, chan, params):
+
+    if chan[0] != '#':
+        return
+
+    modestring = params[1]
+    modes = {}
+    adding = True
+    for c in modestring:
+        if c == '+':
+            adding = True
+        elif c == '-':
+            adding = False
+        else:
+            modes[c] = adding
+
+    if not modes.get('r', True):
+        bot.say(chan, "I do not stay in unregistered channels")
+        bot.part(chan)
+
 
 
 @hook.event('PART')
